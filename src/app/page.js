@@ -1,113 +1,174 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { FaPlay, FaStop } from "react-icons/fa";
 
 export default function Home() {
+  // Keep track of the classification result and the model loading status.
+  const [result, setResult] = useState(null);
+  const [ready, setReady] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (done) {
+      play();
+    }
+  }, [done]);
+
+  const classify = async (imageUrl) => {
+    if (!imageUrl) return;
+
+    setLoading(true);
+    // Make a request to the image to text aka /itt route on the server.
+    const result = await fetch(
+      `/api/itt?image=${encodeURIComponent(imageUrl)}`
+    );
+
+    // If this is the first time we've made a request, set the ready flag.
+    if (!ready) setReady(true);
+
+    const json = await result.json();
+    setResult(json);
+    setDone(true);
+    setLoading(false);
+  };
+
+  const play = () => {
+    let audio = document.getElementById("audio");
+    audio.play();
+  };
+
+  const stop = () => {
+    let audio = document.getElementById("audio");
+    audio.pause();
+  };
+
+  const selected = (imageUrl) => {
+    setImageUrl(imageUrl);
+    classify(imageUrl);
+  };
+
+  const imagesExample = [
+    {
+      imageUrl:
+        "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/10/pizza-recipe-1.jpg",
+      alt: "pizza",
+    },
+    {
+      imageUrl:
+        "https://www.loveandoliveoil.com/wp-content/uploads/2015/03/soy-sauce-noodles4-1-600x900.jpg",
+      alt: "noodels",
+    },
+    {
+      imageUrl: "https://i.ytimg.com/vi/W-NiD3x1mnU/maxresdefault.jpg",
+      alt: "humburger",
+    },
+    {
+      imageUrl:
+        "https://food.fnr.sndimg.com/content/dam/images/food/fullset/2021/02/05/Baked-Feta-Pasta-4_s4x3.jpg.rend.hgtvcom.616.493.suffix/1615916524567.jpeg",
+      alt: "Pasta",
+    },
+    {
+      imageUrl:
+        "https://img.onmanorama.com/content/dam/mm/en/food/foodie/images/2019/10/3/goan-fish-fry.jpg.transform/576x300/image.jpg",
+      alt: "fish",
+    },
+  ];
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="main-area">
+      <main className="flex min-h-screen flex-col items-center justify-center detective">
+        <div className="epic-logo">
+          <Image
+            src={
+              "https://cdn.blerp.com/thumbnails/e120ca50-2574-11ed-872c-11b972513585"
+            }
+            alt="ramsy"
+            layout="fill"
+            objectFit="fill"
+          />
         </div>
-      </div>
+        <h2 className="text-2xl mb-4 text-center detective-title">
+          Reacipe Deteacitve Ai
+        </h2>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        <div className="images-examples">
+          {imagesExample &&
+            imagesExample.map((el, i) => {
+              return (
+                <div
+                  key={i}
+                  className="image-ex"
+                  title={el.alt}
+                  onClick={(e) => selected(el.imageUrl)}
+                >
+                  <Image
+                    src={el.imageUrl}
+                    alt={el.alt}
+                    layout="fill"
+                    objectFit="fill"
+                  />
+                </div>
+              );
+            })}
+        </div>
+        {!result && (
+          <input
+            type="text"
+            className="image-url"
+            placeholder="Enter Image Url here"
+            value={imageUrl}
+            onInput={(e) => {
+              setImageUrl(e.target.value);
+              classify(e.target.value);
+            }}
+          />
+        )}
+        {imageUrl && (
+          <div className="main-image  mt-5">
+            <Image
+              src={imageUrl}
+              alt={imageUrl}
+              layout="fill"
+              objectFit="fill"
+            />
+          </div>
+        )}
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+        {loading && "Loading..."}
+        {!loading && result && (
+          <div className="audio-player">
+            <button onClick={play}>
+              <FaPlay />
+            </button>
+            <button onClick={stop}>
+              <FaStop />
+            </button>
+          </div>
+        )}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+        <audio id="audio" autoPlay src="/speech.mp3"></audio>
+        {result && !loading && <Markdown content={JSON.parse(result.recipe)} />}
+      </main>
+    </div>
   );
 }
+
+const Markdown = ({ content }) => (
+  <ReactMarkdown
+    className="prose mt-1 w-full break-words prose-p:leading-relaxed  py-3 px-3 mark-down"
+    remarkPlugins={[remarkGfm]}
+    components={{
+      a: ({ node, ...props }) => (
+        <a {...props} style={{ color: "#27afcf", fontWeight: "bold" }} />
+      ),
+    }}
+  >
+    {content}
+  </ReactMarkdown>
+);
